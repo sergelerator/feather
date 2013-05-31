@@ -1,3 +1,5 @@
+fs = require("fs")
+
 class module.exports.Base
 
   constructor: (request, response) ->
@@ -6,12 +8,12 @@ class module.exports.Base
     @__beforeAction ||= []
     @__afterAction  ||= []
 
-  handleAction: (actionName) ->
-    if (@[actionName])
+  handleAction: (@actionName) ->
+    if (@[@actionName])
       @executeCallbacksCollection("__beforeAction")
-      @[actionName]()
+      @[@actionName]()
       @executeCallbacksCollection("__afterAction")
-      @render(actionName)
+      @render(@actionName)
 
   executeCallbacksCollection: (collection) ->
     @[collection].forEach((filter) ->
@@ -21,10 +23,16 @@ class module.exports.Base
         console.log("Callbacks must be functions!")
     )
 
-  render: (actionName) ->
-    @response.writeHead(200, {"Content-Type": "text/plain"})
-    @response.write("You are in ##{@constructor.name}/#{actionName}!")
+  render: ->
+    @response.writeHead(200, {"Content-Type": "text/html"})
+    @response.write(@getContent())
     @response.end()
+
+  getContent: ->
+    try
+      fs.readFileSync("./views/#{@constructor.name}/#{@actionName}.html", "utf-8")
+    catch ex
+      ex.stack
 
   @beforeAction: (cb) ->
     (@::__beforeAction ||= []).push cb
